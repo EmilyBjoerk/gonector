@@ -27,6 +27,10 @@ tasks.withType(FindBugs) {
     }
 }
 
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.1'
+}
+
 /*
 findbugs {
     excludeFilter = file("$rootProject.projectDir/findbugsExclude.xml")
