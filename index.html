@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Gonector by EmilyBjoerk</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Gonector</h1>
+      <h2 class="project-tagline">A framework implementing the Go Text Protocol (GTP) version 2 for Java. </h2>
+      <a href="https://github.com/EmilyBjoerk/gonector" class="btn">View on GitHub</a>
+      <a href="https://github.com/EmilyBjoerk/gonector/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/EmilyBjoerk/gonector/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <p><a href="https://travis-ci.org/EmilyBjoerk/gonector"><img src="https://img.shields.io/travis/EmilyBjoerk/gonector.svg" alt="Status"></a>
+<a href="https://codecov.io/github/EmilyBjoerk/gonector?branch=master"><img src="https://img.shields.io/codecov/c/github/EmilyBjoerk/gonector/master.svg" alt="Code Coverage"></a></p>
+
+<h1>
+<a id="gonector" class="anchor" href="#gonector" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GoNector</h1>
+
+<p>GoNector is an easy to use framework implementing the Go Text Protocol (GTP) version 2 for Java. </p>
+
+<h1>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h1>
+
+<p>The easiest way to use GoNector is to connect it to standard input and standard output like so:</p>
+
+<div class="highlight highlight-source-java"><pre>    <span class="pl-k">public</span> <span class="pl-k">static</span> <span class="pl-k">void</span> main(<span class="pl-k">String</span>[] args) {
+        <span class="pl-c">// Create an instance of your go engine</span>
+        <span class="pl-smi">GoEngine</span> engine <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-smi">MyGoEngine</span>();
+
+        <span class="pl-c">// Create reader and writer for standard input and output</span>
+        <span class="pl-smi">BufferedReader</span> reader <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-smi">BufferedReader</span>(<span class="pl-k">new</span> <span class="pl-smi">InputStreamReader</span>(<span class="pl-smi">System</span><span class="pl-k">.</span>in));
+        <span class="pl-smi">Writer</span> writer <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-smi">BufferedWriter</span>(<span class="pl-k">new</span> <span class="pl-smi">OutputStreamWriter</span>(<span class="pl-smi">System</span><span class="pl-k">.</span>out));
+
+        <span class="pl-c">// Run the protocol parsing loop</span>
+        <span class="pl-smi">GoTextProtocol</span> gtp <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-smi">GoTextProtocol</span>(reader, writer, engine);
+        gtp<span class="pl-k">.</span>run();
+    }</pre></div>
+
+<p>All that is left for you to do is to implement the <code>GoEngine</code> interface to implement your bot. Documentation can be found in the JavaDoc, also for reference you might want to read the Go Text Protocol (GTP) specification here: <a href="https://www.lysator.liu.se/%7Egunnar/gtp/">https://www.lysator.liu.se/~gunnar/gtp/</a>.</p>
+
+<p>Once you have implemented your <code>GoEngine</code> and added the above to your main method you should be able to play against the bot using any software that supports the GTP version 2. Like for example: <a href="https://sourceforge.net/projects/gogui/">https://sourceforge.net/projects/gogui/</a>. Simply build your project to a fat jar and give tell GoGui or whatever you choose to use to execute <code>java -jar /path/to/thejarfile.jar</code>.</p>
+
+<p>Here is an example bot that plays random moves:</p>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-k">class</span> <span class="pl-en">RandomGoEngine</span> <span class="pl-k">implements</span> <span class="pl-e">GoEngine</span> {
+    <span class="pl-k">private</span> <span class="pl-k">int</span> size;
+    <span class="pl-k">private</span> <span class="pl-k">final</span> <span class="pl-smi">Random</span> rng <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-smi">Random</span>();
+    <span class="pl-k">private</span> <span class="pl-k">Player</span>[] board;
+
+    <span class="pl-k">@Override</span> <span class="pl-k">public</span> <span class="pl-smi">String</span> <span class="pl-en">getName</span>() {
+        <span class="pl-k">return</span> <span class="pl-s"><span class="pl-pds">"</span>Random Engine<span class="pl-pds">"</span></span>;
+    }
+
+    <span class="pl-k">@Override</span> <span class="pl-k">public</span> <span class="pl-smi">String</span> <span class="pl-en">getVersion</span>() {
+        <span class="pl-k">return</span> <span class="pl-s"><span class="pl-pds">"</span>0.0.1<span class="pl-pds">"</span></span>;
+    }
+
+    <span class="pl-k">@Override</span> <span class="pl-k">public</span> <span class="pl-k">boolean</span> <span class="pl-en">resizeBoard</span>(<span class="pl-k">int</span> <span class="pl-v">aSize</span>) {
+        size <span class="pl-k">=</span> aSize;
+        <span class="pl-k">return</span> <span class="pl-c1">true</span>;
+    }
+
+    <span class="pl-k">@Override</span> <span class="pl-k">public</span> <span class="pl-k">void</span> <span class="pl-en">newGame</span>() {
+        board <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-smi">Player</span>[size<span class="pl-k">*</span>size];
+    }
+
+    <span class="pl-k">@Override</span> <span class="pl-k">public</span> <span class="pl-k">void</span> <span class="pl-en">setKomi</span>(<span class="pl-k">float</span> <span class="pl-v">komi</span>) {
+        <span class="pl-c">// This bot doesn't care about komi. </span>
+    }
+
+    <span class="pl-k">@Override</span> <span class="pl-k">public</span> <span class="pl-k">boolean</span> <span class="pl-en">addMove</span>(<span class="pl-smi">Move</span> <span class="pl-v">aMove</span>, <span class="pl-smi">Player</span> <span class="pl-v">aPlayer</span>) {
+        <span class="pl-k">if</span>(aMove <span class="pl-k">==</span> <span class="pl-smi">Move</span><span class="pl-c1"><span class="pl-k">.</span>PASS</span> <span class="pl-k">||</span> aMove <span class="pl-k">==</span> <span class="pl-smi">Move</span><span class="pl-c1"><span class="pl-k">.</span>RESIGN</span>)
+            <span class="pl-k">return</span> <span class="pl-c1">true</span>;
+
+        <span class="pl-k">int</span> i <span class="pl-k">=</span> aMove<span class="pl-k">.</span>x <span class="pl-k">+</span> aMove<span class="pl-k">.</span>y<span class="pl-k">*</span>size;
+
+        <span class="pl-k">if</span>(<span class="pl-c1">null</span> <span class="pl-k">!=</span> board[i])
+            <span class="pl-k">return</span> <span class="pl-c1">false</span>;
+        board[i] <span class="pl-k">=</span> aPlayer;
+
+        <span class="pl-c">// we'll ignore ko, hopefully we won't randomly play a ko-fight...</span>
+        <span class="pl-k">return</span> <span class="pl-c1">true</span>;
+    }
+
+    <span class="pl-k">@Override</span> <span class="pl-k">public</span> <span class="pl-smi">Move</span> <span class="pl-en">nextMove</span>(<span class="pl-smi">Player</span> <span class="pl-v">player</span>) {
+        <span class="pl-smi">Move</span> c;
+        <span class="pl-k">boolean</span> success;
+        <span class="pl-k">int</span> triesLeft <span class="pl-k">=</span> <span class="pl-c1">3</span>;
+
+        <span class="pl-k">do</span>{
+            c <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-smi">Move</span>(rng<span class="pl-k">.</span>nextInt(size), rng<span class="pl-k">.</span>nextInt(size));
+            success <span class="pl-k">=</span> addMove(c, player);
+            triesLeft<span class="pl-k">--</span>;
+        }<span class="pl-k">while</span> (<span class="pl-k">!</span>success <span class="pl-k">&amp;&amp;</span> triesLeft <span class="pl-k">&gt;=</span> <span class="pl-c1">0</span>);
+
+        <span class="pl-k">if</span>(<span class="pl-k">!</span>success)
+            <span class="pl-k">return</span> <span class="pl-smi">Move</span><span class="pl-c1"><span class="pl-k">.</span>RESIGN</span>;
+        <span class="pl-k">return</span> c;
+    }
+}</pre></div>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/EmilyBjoerk/gonector">Gonector</a> is maintained by <a href="https://github.com/EmilyBjoerk">EmilyBjoerk</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
