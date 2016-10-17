@@ -42,7 +42,7 @@ The easiest way to use GoNector is to connect it to standard input and standard 
 
         // Run the protocol parsing loop
         GoTextProtocol gtp = new GoTextProtocol(reader, writer, engine);
-        gtp.run();
+        gtp.call();
     }
 ```
 
