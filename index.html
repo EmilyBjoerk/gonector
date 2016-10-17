@@ -20,12 +20,36 @@
 
     <section class="main-content">
       <p><a href="https://travis-ci.org/EmilyBjoerk/gonector"><img src="https://img.shields.io/travis/EmilyBjoerk/gonector.svg" alt="Status"></a>
-<a href="https://codecov.io/github/EmilyBjoerk/gonector?branch=master"><img src="https://img.shields.io/codecov/c/github/EmilyBjoerk/gonector/master.svg" alt="Code Coverage"></a></p>
+<a href="https://codecov.io/github/EmilyBjoerk/gonector?branch=master"><img src="https://img.shields.io/codecov/c/github/EmilyBjoerk/gonector/master.svg" alt="Code Coverage"></a>
+<a href="https://bintray.com/emilybjoerk/lisoft/gonector"><img src="https://img.shields.io/bintray/v/emilybjoerk/lisoft/gonector.svg" alt="Bintray"></a></p>
 
 <h1>
 <a id="gonector" class="anchor" href="#gonector" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GoNector</h1>
 
 <p>GoNector is an easy to use framework implementing the Go Text Protocol (GTP) version 2 for Java. </p>
+
+<h1>
+<a id="downloading" class="anchor" href="#downloading" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Downloading</h1>
+
+<p>The project has been submitted to jcentral for approval and once that passes it will be available as below. </p>
+
+<p>Gradle (not yet available, avaiting approval):</p>
+
+<div class="highlight highlight-source-groovy-gradle"><pre>compile <span class="pl-s"><span class="pl-pds">'</span>org.li-soft.gonector:gonector:1.0.0<span class="pl-pds">'</span></span></pre></div>
+
+<p>Maven (not yet available, avaiting approval):</p>
+
+<div class="highlight highlight-text-xml"><pre>&lt;<span class="pl-ent">dependency</span>&gt;
+  &lt;<span class="pl-ent">groupId</span>&gt;org.li-soft.gonector&lt;/<span class="pl-ent">groupId</span>&gt;
+  &lt;<span class="pl-ent">artifactId</span>&gt;gonector&lt;/<span class="pl-ent">artifactId</span>&gt;
+  &lt;<span class="pl-ent">version</span>&gt;1.0.0&lt;/<span class="pl-ent">version</span>&gt;
+  &lt;<span class="pl-ent">type</span>&gt;pom&lt;/<span class="pl-ent">type</span>&gt;
+&lt;/<span class="pl-ent">dependency</span>&gt;</pre></div>
+
+<h1>
+<a id="javadoc" class="anchor" href="#javadoc" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>JavaDoc</h1>
+
+<p>The JavaDoc can be found here: <a href="https://emilybjoerk.github.io/gonector/javadoc/">https://emilybjoerk.github.io/gonector/javadoc/</a> </p>
 
 <h1>
 <a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h1>
@@ -47,7 +71,7 @@
 
 <p>All that is left for you to do is to implement the <code>GoEngine</code> interface to implement your bot. Documentation can be found in the JavaDoc, also for reference you might want to read the Go Text Protocol (GTP) specification here: <a href="https://www.lysator.liu.se/%7Egunnar/gtp/">https://www.lysator.liu.se/~gunnar/gtp/</a>.</p>
 
-<p>Once you have implemented your <code>GoEngine</code> and added the above to your main method you should be able to play against the bot using any software that supports the GTP version 2. Like for example: <a href="https://sourceforge.net/projects/gogui/">https://sourceforge.net/projects/gogui/</a>. Simply build your project to a fat jar and give tell GoGui or whatever you choose to use to execute <code>java -jar /path/to/thejarfile.jar</code>.</p>
+<p>Once you have implemented your <code>GoEngine</code> and added the above to your main method you should be able to play against the bot using any software that supports the GTP version 2. Like for example: <a href="https://sourceforge.net/projects/gogui/">https://sourceforge.net/projects/gogui/</a>. Simply build your project to a fat jar and tell GoGui or whatever program you choose to use to execute <code>java -jar /path/to/thejarfile.jar</code>.</p>
 
 <p>Here is an example bot that plays random moves:</p>
 
