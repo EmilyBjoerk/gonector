@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -34,9 +36,12 @@ import org.apache.logging.log4j.Logger;
 /**
  * This class implements the GTP protocol and links it to a {@link GoEngine}.
  *
+ * The class implements {@link Callable} so that you can submit it to an
+ * {@link ExecutorService} to run asynchronously.
+ *
  * @author Emily Björk
  */
-public class GoTextProtocol implements Runnable {
+public class GoTextProtocol implements Callable<Void> {
 	/**
 	 * This functional interface is used to implement a command in the Go Text
 	 * Protocol.
@@ -69,7 +74,8 @@ public class GoTextProtocol implements Runnable {
 	 * A regular expression that is used for matching and splitting commands
 	 * into parts.
 	 */
-	private static final Pattern COMMAND_PATTERN = Pattern.compile("(\\d+)? ?(\\S+)(?: (.*))?");
+	private static final Pattern COMMAND_PATTERN = Pattern.compile("^(\\d*)\\s*(\\S+)\\s*([^#]*?)\\s*(#.*)?$");
+	private static final String[] EMPTY_ARGS = new String[0];
 
 	/**
 	 * The version of the GTP protocol that is implemented.
@@ -97,15 +103,6 @@ public class GoTextProtocol implements Runnable {
 		}
 	}
 
-	private static String clean(String aCommand) {
-		String ans = aCommand.replace('\t', ' ');
-		final int commentStart = ans.indexOf('#');
-		if (commentStart >= 0) {
-			ans = ans.substring(0, commentStart);
-		}
-		return ans.replaceAll("[\\p{Cntrl}&&[^\\n]]", "").trim();
-	}
-
 	private final Map<String, Command> commands;
 	private final GoEngine engine;
 	private final Logger logger = LogManager.getLogger(GoTextProtocol.class);
@@ -120,11 +117,11 @@ public class GoTextProtocol implements Runnable {
 	 * @param aReader
 	 *            The reader to read input from the controller from. It is the
 	 *            responsibility of the caller to close this reader when
-	 *            {@link #run()} exits.
+	 *            {@link #call()} exits.
 	 * @param aWriter
 	 *            A writer to send input to the controller from. It is the
 	 *            responsibility of the caller to close this writer when
-	 *            {@link #run()} exits.
+	 *            {@link #call()} exits.
 	 * @param aEngine
 	 *            A {@link GoEngine} that is used for serving the requests from
 	 *            the controller.
@@ -208,8 +205,18 @@ public class GoTextProtocol implements Runnable {
 		});
 	}
 
+	/**
+	 * Runs the protocol until the remote disconnects.
+	 *
+	 * @throws Exception
+	 *             Whatever the {@link GoEngine} throws. If {@link GoEngine}
+	 *             throws this method will log the error and then re-throw,
+	 *             terminating the parsing. The connection to the controller
+	 *             must then be reset because the engine and the controller may
+	 *             have de-synced.
+	 */
 	@Override
-	public void run() {
+	public Void call() throws Exception {
 		try {
 			while (true) {
 				int id = -1;
@@ -222,32 +229,31 @@ public class GoTextProtocol implements Runnable {
 					if (null == line) {
 						break;// Remote disconnected
 					}
-					line = clean(line);
-					if (line.isEmpty()) {
-						continue;
-					}
+					// Remove any non newline control characters per protocol
+					// specification. We use regexp that is insensitive to \t
+					// and " " so we don't need to replace \t by " ", the regexp
+					// also takes care of comments so we don't need to do that
+					// either.
+					line = line.replaceAll("[\\p{Cntrl}&&[^\\n]]", "");
 
-					Command cmd = null;
-					String[] args = new String[0];
 					final Matcher m = COMMAND_PATTERN.matcher(line);
+					// The regular expression is designed so that everything
+					// except whitespace only lines match.
 					if (m.matches()) {
-						if (m.group(1) != null) {
+						if (!m.group(1).isEmpty()) {
 							id = Integer.parseInt(m.group(1));
 						}
 						final String cmdName = m.group(2);
-						if (m.group(3) != null) {
-							args = m.group(3).split(" ");
-						}
-						cmd = commands.get(cmdName);
-					}
+						final String[] args = m.group(3).isEmpty() ? EMPTY_ARGS : m.group(3).split("\\s+");
+						final Command cmd = commands.get(cmdName);
 
-					if (null != cmd) {
-						final boolean keepGoing = cmd.process(id, args);
-						if (!keepGoing) {
-							break;
+						if (null != cmd) {
+							if (!cmd.process(id, args)) {
+								break;
+							}
+						} else {
+							respond(false, id, UNKNOWN_COMMAND);
 						}
-					} else {
-						respond(false, id, UNKNOWN_COMMAND);
 					}
 				} catch (final SyntaxErrorException e) {
 					respond(false, id, "syntax error in command: " + line + "\nError was: " + e.getMessage());
@@ -257,8 +263,10 @@ public class GoTextProtocol implements Runnable {
 			logger.error("An IO error occurred: {}", e.getMessage());
 			logger.error("Closing connection.");
 		} catch (final Exception e) {
-			logger.fatal("Terminating due to unknown!", e);
+			logger.fatal("Terminating due to unknown exception!", e);
+			throw e;
 		}
+		return null;
 	}
 
 	/**
@@ -275,9 +283,6 @@ public class GoTextProtocol implements Runnable {
 	 * @throws IOException
 	 */
 	private void respond(boolean aSuccess, int aId, String aMessage) throws IOException {
-		if (!aSuccess && aMessage.trim().isEmpty()) {
-			throw new RuntimeException("A failure must always have a message!");
-		}
 		writer.append(aSuccess ? '=' : '?');
 		if (aId >= 0) {
 			writer.append(Integer.toString(aId));

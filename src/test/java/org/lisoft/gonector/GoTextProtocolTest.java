@@ -21,7 +21,10 @@ package org.lisoft.gonector;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyChar;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -33,6 +36,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -48,8 +52,8 @@ import org.junit.Test;
 public class GoTextProtocolTest {
 	final GoEngine engine = mock(GoEngine.class);
 
-	@Test(timeout = 3000)
-	public void testBoardSize() throws IOException {
+	@Test
+	public void testBoardSize() throws Exception {
 		when(engine.resizeBoard(19)).thenReturn(Boolean.TRUE);
 		assertEquals("=\n\n", runCommand("boardsize 19\n"));
 		verify(engine).resizeBoard(19);
@@ -59,8 +63,8 @@ public class GoTextProtocolTest {
 		verify(engine).resizeBoard(17);
 	}
 
-	@Test(timeout = 3000)
-	public void testBoardSizeOutsideSpec() throws IOException {
+	@Test
+	public void testBoardSizeOutsideSpec() throws Exception {
 		when(engine.resizeBoard(anyInt())).thenReturn(Boolean.TRUE);
 		assertEquals("? unacceptable size\n\n",
 				runCommand("boardsize " + Integer.toString(Move.MIN_BOARD_SIZE - 1) + "\n"));
@@ -73,15 +77,15 @@ public class GoTextProtocolTest {
 		verifyNoMoreInteractions(engine);
 	}
 
-	@Test(timeout = 3000)
-	public void testBoardSizeTooFewArgs() throws IOException {
+	@Test
+	public void testBoardSizeTooFewArgs() throws Exception {
 		assertEquals("? syntax error in command: boardsize\nError was: Invalid number of arguments!\n\n",
 				runCommand("boardsize\n"));
 		verifyZeroInteractions(engine);
 	}
 
-	@Test(timeout = 3000)
-	public void testBoardSizeWrongTypeArgs() throws IOException {
+	@Test
+	public void testBoardSizeWrongTypeArgs() throws Exception {
 		assertEquals("? syntax error in command: boardsize ninteen\nError was: Not an integer: ninteen!\n\n",
 				runCommand("boardsize ninteen\n"));
 		assertEquals("?32 syntax error in command: 32 boardsize ninteen\nError was: Not an integer: ninteen!\n\n",
@@ -89,43 +93,52 @@ public class GoTextProtocolTest {
 		verifyZeroInteractions(engine);
 	}
 
-	@Test(timeout = 3000)
-	public void testClearBoard() throws IOException {
+	@Test
+	public void testClearBoard() throws Exception {
 		assertEquals("=\n\n", runCommand("clear_board\n"));
 		verify(engine).newGame();
 	}
 
-	@Test(timeout = 3000)
-	public void testEmptyLine() throws IOException {
+	@Test
+	public void testEmptyLine() throws Exception {
 		assertEquals("", runCommand("\n\r\n"));
 		assertEquals("", runCommand(" "));
 		assertEquals("", runCommand("\t"));
 
 	}
 
-	@Test(timeout = 3000)
-	public void testGenMove() throws IOException {
+	@Test(expected = RuntimeException.class)
+	public void testEngineThrows() throws Exception {
+
+		doThrow(RuntimeException.class).when(engine).setKomi(3.2f);
+
+		// No response when engine throws.
+		assertEquals("", runCommand("komi 3.2\n"));
+	}
+
+	@Test
+	public void testGenMove() throws Exception {
 		when(engine.nextMove(Player.BLACK)).thenReturn(Move.RESIGN);
 		assertEquals("= resign\n\n", runCommand("genmove black\n"));
 		verify(engine).nextMove(Player.BLACK);
 	}
 
-	@Test(timeout = 3000)
-	public void testGenMoveBadArg() throws IOException {
+	@Test
+	public void testGenMoveBadArg() throws Exception {
 		assertEquals("? syntax error in command: genmove who\nError was: Unknown player: who!\n\n",
 				runCommand("genmove who\n"));
 		verifyZeroInteractions(engine);
 	}
 
-	@Test(timeout = 3000)
-	public void testGenMoveMissingArg() throws IOException {
+	@Test
+	public void testGenMoveMissingArg() throws Exception {
 		assertEquals("? syntax error in command: genmove\nError was: Invalid number of arguments!\n\n",
 				runCommand("genmove\n"));
 		verifyZeroInteractions(engine);
 	}
 
-	@Test(timeout = 3000)
-	public void testKnownCommand() throws IOException {
+	@Test
+	public void testKnownCommand() throws Exception {
 		// Required commands:
 		assertEquals("= true\n\n", runCommand("known_command protocol_version\n"));
 		assertEquals("= true\n\n", runCommand("known_command name\n"));
@@ -141,35 +154,35 @@ public class GoTextProtocolTest {
 		assertEquals("= false\n\n", runCommand("known_command notexists\n"));
 	}
 
-	@Test(timeout = 3000)
-	public void testKomi() throws IOException {
+	@Test
+	public void testKomi() throws Exception {
 		assertEquals("=\n\n", runCommand("komi 4.3\n"));
 		verify(engine).setKomi(4.3f);
 	}
 
-	@Test(timeout = 3000)
-	public void testKomiInteger() throws IOException {
+	@Test
+	public void testKomiInteger() throws Exception {
 		assertEquals("=\n\n", runCommand("komi 4\n"));
 		verify(engine).setKomi(4.0f);
 	}
 
-	@Test(timeout = 3000)
-	public void testKomiNoArg() throws IOException {
+	@Test
+	public void testKomiNoArg() throws Exception {
 		assertEquals("? syntax error in command: komi\nError was: Invalid number of arguments!\n\n",
 				runCommand("komi\n"));
 
 		verifyZeroInteractions(engine);
 	}
 
-	@Test(timeout = 3000)
-	public void testKomiNonNumberArg() throws IOException {
+	@Test
+	public void testKomiNonNumberArg() throws Exception {
 		assertEquals("? syntax error in command: komi foo\nError was: Not a float: foo!\n\n", runCommand("komi foo\n"));
 
 		verifyZeroInteractions(engine);
 	}
 
-	@Test(timeout = 3000)
-	public void testListCommand() throws IOException {
+	@Test
+	public void testListCommand() throws Exception {
 		final String cmds = runCommand("list_commands");
 		assertTrue(cmds.startsWith("= "));
 		final Set<String> commandSet = Arrays.stream(cmds.substring(2).split("\n")).filter(x -> !x.isEmpty())
@@ -189,85 +202,102 @@ public class GoTextProtocolTest {
 
 	}
 
-	@Test(timeout = 3000)
-	public void testName() throws IOException {
+	@Test
+	public void testName() throws Exception {
 		when(engine.getName()).thenReturn("abc");
 		assertEquals("= abc\n\n", runCommand("name\n"));
 		assertEquals("= abc\n\n", runCommand("name # This is a comment\n"));
 		assertEquals("=32 abc\n\n", runCommand("32 name\n"));
 	}
 
-	@Test(timeout = 3000)
-	public void testPlay() throws IOException, SyntaxErrorException {
+	@Test
+	public void testPipeThrows() throws Exception {
+		@SuppressWarnings("resource")
+		final Writer w = mock(Writer.class);
+		when(w.append(any())).thenThrow(IOException.class);
+		when(w.append(anyChar())).thenThrow(IOException.class);
+
+		try (StringReader stringReader = new StringReader("komi 3.2\n");
+				final BufferedReader br = new BufferedReader(stringReader);) {
+			final GoTextProtocol cut = new GoTextProtocol(br, w, engine);
+			cut.call();
+		}
+		// Don't write anything to the pipe after the exception.
+		verify(w).append('=');
+		verifyNoMoreInteractions(w);
+	}
+
+	@Test
+	public void testPlay() throws Exception, SyntaxErrorException {
 		when(engine.addMove(Move.valueOf("r10"), Player.BLACK)).thenReturn(true);
 		assertEquals("=\n\n", runCommand("play black r10\n"));
 		verify(engine).addMove(Move.valueOf("r10"), Player.BLACK);
 	}
 
-	@Test(timeout = 3000)
-	public void testPlayBadMove() throws IOException {
+	@Test
+	public void testPlayBadMove() throws Exception {
 		assertEquals(
 				"? syntax error in command: play b somewhere\nError was: Invalid move: somewhere, expected integer after first character!\n\n",
 				runCommand("play b somewhere\n"));
 		verifyZeroInteractions(engine);
 	}
 
-	@Test(timeout = 3000)
-	public void testPlayBadPlayer() throws IOException {
+	@Test
+	public void testPlayBadPlayer() throws Exception {
 		assertEquals("? syntax error in command: play bl r10\nError was: Unknown player: bl!\n\n",
 				runCommand("play bl r10\n"));
 		verifyZeroInteractions(engine);
 	}
 
-	@Test(timeout = 3000)
-	public void testPlayInvalidMove() throws IOException, SyntaxErrorException {
+	@Test
+	public void testPlayInvalidMove() throws Exception, SyntaxErrorException {
 		when(engine.addMove(Move.valueOf("r10"), Player.BLACK)).thenReturn(false);
 		assertEquals("? illegal move\n\n", runCommand("play black r10\n"));
 		verify(engine).addMove(Move.valueOf("r10"), Player.BLACK);
 	}
 
-	@Test(timeout = 3000)
-	public void testPlayMissingArgs() throws IOException {
+	@Test
+	public void testPlayMissingArgs() throws Exception {
 		assertEquals("? syntax error in command: play black\nError was: Invalid number of arguments!\n\n",
 				runCommand("play black\n"));
 		verifyZeroInteractions(engine);
 	}
 
-	@Test(timeout = 3000)
-	public void testProtocolVersion() throws IOException {
+	@Test
+	public void testProtocolVersion() throws Exception {
 		assertEquals("= 2\n\n", runCommand("protocol_version\n"));
 		assertEquals("= 2\n\n", runCommand("protocol_version # This is a comment\n"));
 		assertEquals("=3 2\n\n", runCommand("3 protocol_version\n"));
 	}
 
-	@Test(timeout = 3000)
-	public void testQuit() throws IOException {
+	@Test
+	public void testQuit() throws Exception {
 		assertEquals("=\n\n", runCommand("quit\n"));
 		assertEquals("=\n\n", runCommand("quit # This is a comment\n"));
 		assertEquals("=32\n\n", runCommand("32 quit\n"));
 	}
 
-	@Test(timeout = 3000)
-	public void testUnknownCommand() throws IOException {
+	@Test
+	public void testUnknownCommand() throws Exception {
 		when(engine.getName()).thenReturn("abc");
 		assertEquals("?123 unknown command\n\n", runCommand("123 bad_command argument 1 2 3\n"));
 		assertEquals("? unknown command\n\n", runCommand("bad_command\n"));
 	}
 
-	@Test(timeout = 3000)
-	public void testVersion() throws IOException {
+	@Test
+	public void testVersion() throws Exception {
 		when(engine.getVersion()).thenReturn("123");
 		assertEquals("= 123\n\n", runCommand("version\n"));
 		assertEquals("=1 123\n\n", runCommand("1 version\n"));
 	}
 
-	private String runCommand(String aCommand) throws IOException {
+	private String runCommand(String aCommand) throws Exception {
 		try (StringReader stringReader = new StringReader(aCommand);
 				final BufferedReader br = new BufferedReader(stringReader);
 				StringWriter stringWriter = new StringWriter();
 				final BufferedWriter bw = new BufferedWriter(stringWriter);) {
 			final GoTextProtocol cut = new GoTextProtocol(br, bw, engine);
-			cut.run();
+			cut.call();
 			return stringWriter.toString();
 		}
 	}

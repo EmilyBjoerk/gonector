@@ -7,12 +7,24 @@ apply plugin: 'jacoco'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
-// Project properties
+/*
+ * Project properties
+ */
 group 'org.li-soft.gonector'
 
 repositories {
     jcenter()
 }
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.1'
+}
+
+/*
+ * Building
+ */
+sourceCompatibility = 1.8
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 dependencies {
     compile 'org.apache.logging.log4j:log4j-api:2.7+',
@@ -20,12 +32,6 @@ dependencies {
     testCompile 'junit:junit:4.11+', 
     			'org.mockito:mockito-core:2.1+' 
 }
-
-/*
-* Building
-*/
-sourceCompatibility = 1.8
-[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
@@ -41,13 +47,9 @@ artifacts {
     archives sourcesJar, javadocJar
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '3.1'
-}
-
 /*
-* Verification
-*/
+ * Verification
+ */
 tasks.withType(FindBugs) {
     reports {
         xml.enabled false
@@ -55,24 +57,10 @@ tasks.withType(FindBugs) {
     }
 }
 
-/*
-findbugs {
-    excludeFilter = file("$rootProject.projectDir/findbugsExclude.xml")
-}*/
-
 jacocoTestReport {
     reports {
         xml.enabled = true
         html.enabled = true
-    }
-
-    afterEvaluate {
-        classDirectories = files(classDirectories.files.collect {
-            fileTree(dir: it,
-                    exclude: ['**/view_fx/**',
-                              '**/datacache/gamedata/**',
-                              '**/datacache/DataCache*'])
-        })
     }
 }
 
@@ -80,8 +68,14 @@ check.dependsOn jacocoTestReport
 jar.dependsOn check
 
 /*
-* Publishing
-*/
+ * Publishing
+ */
+task(checkVersionPresent) << {
+	if(project.version == 'unspecified' || project.version == null){
+		throw StopExecutionException('Must provide version number with -Pversion="x.y.z"!')
+	}
+}
+
 publishing {
     publications {
         gonector(MavenPublication) {
@@ -96,7 +90,6 @@ bintray {
 	user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
 	key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
 	publications = ['gonector']
-	//dryRun = true
 	pkg {
 		repo = 'lisoft'
 		name = project.name
@@ -112,12 +105,5 @@ bintray {
 		}
 	}
 }
-
-task(checkVersionPresent) << {
-	//println project.version
-	if(project.version == 'unspecified'){
-		throw StopExecutionException('Must provide version number with -Pversion="x.y.z"!')
-	}
-} 
 
 bintrayUpload.dependsOn checkVersionPresent

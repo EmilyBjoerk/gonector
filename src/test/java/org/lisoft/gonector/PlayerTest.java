@@ -62,4 +62,18 @@ public class PlayerTest {
 	public void testFromStringNull() throws SyntaxErrorException {
 		Player.fromString(null);
 	}
+
+	@Test
+	public void testValueOf() {
+		// For test coverage only really.
+		assertEquals(Player.BLACK, Player.valueOf("BLACK"));
+		assertEquals(Player.WHITE, Player.valueOf("WHITE"));
+	}
+
+	@Test
+	public void testValues() {
+		// For test coverage only really.
+		final Player[] players = Player.values();
+		assertEquals(2, players.length);
+	}
 }
