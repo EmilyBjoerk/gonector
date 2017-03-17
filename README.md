@@ -6,15 +6,14 @@
 GoNector is an easy to use framework implementing the Go Text Protocol (GTP) version 2 for Java. 
 
 # Downloading
-The project has been submitted to jcentral for approval and once that passes it will be available as below. 
+Gonector is available from the [jcenter](https://bintray.com/bintray/jcenter) Maven repository. After adding the repository to your build scripts, you can use gonector in your gradle or maven projects as follows:
 
-
-Gradle (not yet available, avaiting approval):
+Gradle:
 ```gradle
 compile 'org.li-soft.gonector:gonector:1.0.0'
 ```
 
-Maven (not yet available, avaiting approval):
+Maven:
 ```xml
 <dependency>
   <groupId>org.li-soft.gonector</groupId>
@@ -42,7 +41,7 @@ The easiest way to use GoNector is to connect it to standard input and standard 
 
         // Run the protocol parsing loop
         GoTextProtocol gtp = new GoTextProtocol(reader, writer, engine);
-        gtp.run();
+        gtp.call();
     }
 ```
 
