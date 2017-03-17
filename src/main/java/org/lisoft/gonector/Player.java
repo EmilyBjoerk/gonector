@@ -28,11 +28,11 @@ public enum Player {
 	/**
 	 * The black player.
 	 */
-	BLACK,
+	BLACK("B"),
 	/**
 	 * The white player.
 	 */
-	WHITE;
+	WHITE("W");
 
 	/**
 	 * Converts from a GTP string to an enumeration. The GTP strings are case
@@ -57,4 +57,18 @@ public enum Player {
 		}
 		throw new SyntaxErrorException("Unknown player: " + str + "!");
 	}
+
+	private String shortName;
+
+	private Player(String aShortName) {
+		shortName = aShortName;
+	}
+
+	/**
+	 * @return The short name of the player. I.e. "B" or "W".
+	 */
+	public String toShortString() {
+		return shortName;
+	}
+
 }

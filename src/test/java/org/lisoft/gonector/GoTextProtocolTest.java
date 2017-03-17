@@ -20,15 +20,16 @@
 package org.lisoft.gonector;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyChar;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.BufferedReader;
@@ -74,6 +75,7 @@ public class GoTextProtocolTest {
 				runCommand("boardsize " + Integer.toString(Move.MAX_BOARD_SIZE + 1) + "\n"));
 		verify(engine).resizeBoard(Move.MIN_BOARD_SIZE);
 		verify(engine).resizeBoard(Move.MAX_BOARD_SIZE);
+		verify(engine, times(4)).canScore();
 		verifyNoMoreInteractions(engine);
 	}
 
@@ -81,7 +83,8 @@ public class GoTextProtocolTest {
 	public void testBoardSizeTooFewArgs() throws Exception {
 		assertEquals("? syntax error in command: boardsize\nError was: Invalid number of arguments!\n\n",
 				runCommand("boardsize\n"));
-		verifyZeroInteractions(engine);
+		verify(engine).canScore();
+		verifyNoMoreInteractions(engine);
 	}
 
 	@Test
@@ -90,7 +93,8 @@ public class GoTextProtocolTest {
 				runCommand("boardsize ninteen\n"));
 		assertEquals("?32 syntax error in command: 32 boardsize ninteen\nError was: Not an integer: ninteen!\n\n",
 				runCommand("32 boardsize ninteen\n"));
-		verifyZeroInteractions(engine);
+		verify(engine, times(2)).canScore();
+		verifyNoMoreInteractions(engine);
 	}
 
 	@Test
@@ -117,6 +121,55 @@ public class GoTextProtocolTest {
 	}
 
 	@Test
+	public void testFinalScoreCannotScore() throws Exception {
+		when(engine.canScore()).thenReturn(false);
+
+		assertEquals("= false\n\n", runCommand("known_command final_score\n"));
+		assertFalse(runCommand("list_commands").contains("final_score"));
+		assertEquals("? unknown command\n\n", runCommand("final_score\n"));
+	}
+
+	@Test
+	public void testFinalScoreCanScore() throws Exception {
+		when(engine.canScore()).thenReturn(true);
+		when(engine.getScore()).thenReturn(new Score(Player.WHITE, 3.5));
+
+		assertEquals("= true\n\n", runCommand("known_command final_score\n"));
+		assertTrue(runCommand("list_commands").contains("final_score"));
+		assertEquals("= W+3.5\n\n", runCommand("final_score\n"));
+	}
+
+	@Test
+	public void testFinalScoreDraw() throws Exception {
+		when(engine.canScore()).thenReturn(true);
+		when(engine.getScore()).thenReturn(Score.DRAW);
+
+		assertEquals("= 0\n\n", runCommand("final_score\n"));
+	}
+
+	/**
+	 * The exception escapes the processing loop and it is up to the caller to
+	 * close the socket. This is a terminal situation.
+	 */
+	@Test(expected = UnsupportedOperationException.class)
+	public void testFinalScoreIllbehavedBot() throws Exception {
+		when(engine.canScore()).thenReturn(true);
+		when(engine.getScore()).thenThrow(UnsupportedOperationException.class);
+		runCommand("final_score\n");
+	}
+
+	/**
+	 * If the bot returns a <code>null</code> score object then this is also an
+	 * error and we will terminate orderly.
+	 */
+	@Test
+	public void testFinalScoreNull() throws Exception {
+		when(engine.canScore()).thenReturn(true);
+		when(engine.getScore()).thenReturn(null);
+		assertEquals("", runCommand("final_score\n"));
+	}
+
+	@Test
 	public void testGenMove() throws Exception {
 		when(engine.nextMove(Player.BLACK)).thenReturn(Move.RESIGN);
 		assertEquals("= resign\n\n", runCommand("genmove black\n"));
@@ -127,14 +180,16 @@ public class GoTextProtocolTest {
 	public void testGenMoveBadArg() throws Exception {
 		assertEquals("? syntax error in command: genmove who\nError was: Unknown player: who!\n\n",
 				runCommand("genmove who\n"));
-		verifyZeroInteractions(engine);
+		verify(engine).canScore();
+		verifyNoMoreInteractions(engine);
 	}
 
 	@Test
 	public void testGenMoveMissingArg() throws Exception {
 		assertEquals("? syntax error in command: genmove\nError was: Invalid number of arguments!\n\n",
 				runCommand("genmove\n"));
-		verifyZeroInteractions(engine);
+		verify(engine).canScore();
+		verifyNoMoreInteractions(engine);
 	}
 
 	@Test
@@ -170,15 +225,15 @@ public class GoTextProtocolTest {
 	public void testKomiNoArg() throws Exception {
 		assertEquals("? syntax error in command: komi\nError was: Invalid number of arguments!\n\n",
 				runCommand("komi\n"));
-
-		verifyZeroInteractions(engine);
+		verify(engine).canScore();
+		verifyNoMoreInteractions(engine);
 	}
 
 	@Test
 	public void testKomiNonNumberArg() throws Exception {
 		assertEquals("? syntax error in command: komi foo\nError was: Not a float: foo!\n\n", runCommand("komi foo\n"));
-
-		verifyZeroInteractions(engine);
+		verify(engine).canScore();
+		verifyNoMoreInteractions(engine);
 	}
 
 	@Test
@@ -223,7 +278,7 @@ public class GoTextProtocolTest {
 			cut.call();
 		}
 		// Don't write anything to the pipe after the exception.
-		verify(w).append('=');
+		verify(w).append("=");
 		verifyNoMoreInteractions(w);
 	}
 
@@ -239,14 +294,18 @@ public class GoTextProtocolTest {
 		assertEquals(
 				"? syntax error in command: play b somewhere\nError was: Invalid move: somewhere, expected integer after first character!\n\n",
 				runCommand("play b somewhere\n"));
-		verifyZeroInteractions(engine);
+		verify(engine).canScore();
+		verifyNoMoreInteractions(engine);
+
 	}
 
 	@Test
 	public void testPlayBadPlayer() throws Exception {
 		assertEquals("? syntax error in command: play bl r10\nError was: Unknown player: bl!\n\n",
 				runCommand("play bl r10\n"));
-		verifyZeroInteractions(engine);
+		verify(engine).canScore();
+		verifyNoMoreInteractions(engine);
+
 	}
 
 	@Test
@@ -260,7 +319,9 @@ public class GoTextProtocolTest {
 	public void testPlayMissingArgs() throws Exception {
 		assertEquals("? syntax error in command: play black\nError was: Invalid number of arguments!\n\n",
 				runCommand("play black\n"));
-		verifyZeroInteractions(engine);
+		verify(engine).canScore();
+		verifyNoMoreInteractions(engine);
+
 	}
 
 	@Test

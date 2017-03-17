@@ -50,12 +50,36 @@ public interface GoEngine {
 	boolean addMove(Move aMove, Player aPlayer);
 
 	/**
+	 * Asks the robot if it supports scoring of games. The returned value must
+	 * be constant for the life time of the {@link GoEngine} instance.
+	 *
+	 * If this method returns <code>true</code> then {@link #getScore()} must
+	 * return a valid {@link Score} object for all games.
+	 *
+	 * @return <code>true</code> if this engine is capable of scoring a game.
+	 */
+	default boolean canScore() {
+		return false;
+	}
+
+	/**
 	 * The identity of the robot.
 	 *
 	 * @return A string with the name of the robot. May contain spaces, should
 	 *         not contain version number. Must be ASCII only.
 	 */
 	String getName();
+
+	/**
+	 * Asks the robot to compute the score. If {@link #canScore()} returns true,
+	 * then this method must be implemented and must return a valid
+	 * {@link Score} object for the current game.
+	 *
+	 * @return A new {@link Score} object or {@link Score#DRAW}.
+	 */
+	default Score getScore() {
+		throw new UnsupportedOperationException("Engine doesn't support scoring!");
+	}
 
 	/**
 	 * The version number of the robot.

@@ -203,6 +203,17 @@ public class GoTextProtocol implements Callable<Void> {
 			respond(true, id, move.toString());
 			return true;
 		});
+		if (engine.canScore()) {
+			commands.put("final_score", (id, arg) -> {
+				final Score score = engine.getScore();
+				if (null != score) {
+					respond(true, id, score.toString());
+					return true;
+				}
+				logger.fatal("getScore() returned null!");
+				return false;
+			});
+		}
 	}
 
 	/**
@@ -224,7 +235,7 @@ public class GoTextProtocol implements Callable<Void> {
 
 				try {
 					line = reader.readLine();
-					logger.debug("Remote sent: " + line);
+					logger.debug("Remote sent: {}", line);
 
 					if (null == line) {
 						break;// Remote disconnected
@@ -283,14 +294,18 @@ public class GoTextProtocol implements Callable<Void> {
 	 * @throws IOException
 	 */
 	private void respond(boolean aSuccess, int aId, String aMessage) throws IOException {
-		writer.append(aSuccess ? '=' : '?');
+		final StringBuilder sb = new StringBuilder();
+
+		sb.append(aSuccess ? '=' : '?');
 		if (aId >= 0) {
-			writer.append(Integer.toString(aId));
+			sb.append(Integer.toString(aId));
 		}
 		if (!aMessage.isEmpty()) {
-			writer.append(' ').append(aMessage);
+			sb.append(' ').append(aMessage);
 		}
-		writer.append("\n\n");
+		logger.debug("Local sending...: [{}]", sb.toString());
+		writer.append(sb.toString()).append("\n\n");
 		writer.flush();
+		logger.debug("Local sent OK");
 	}
 }

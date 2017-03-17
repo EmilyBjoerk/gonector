@@ -64,6 +64,12 @@ public class PlayerTest {
 	}
 
 	@Test
+	public void testToShortString() {
+		assertEquals("W", Player.WHITE.toShortString());
+		assertEquals("B", Player.BLACK.toShortString());
+	}
+
+	@Test
 	public void testValueOf() {
 		// For test coverage only really.
 		assertEquals(Player.BLACK, Player.valueOf("BLACK"));
