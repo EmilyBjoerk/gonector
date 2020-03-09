@@ -1,10 +1,12 @@
 plugins {
-    id "com.jfrog.bintray" version "1.7"
+  id "com.jfrog.bintray" version "1.8.4"
+  id "com.github.spotbugs" version "4.0.1"
+  id 'org.ajoberstar.grgit' version '1.7.2'
+  id 'org.ajoberstar.release-opinion' version '1.7.2'
 }
+
 apply plugin: 'java'
-apply plugin: 'findbugs'
 apply plugin: 'jacoco'
-apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
 /*
@@ -13,11 +15,7 @@ apply plugin: 'maven-publish'
 group 'org.li-soft.gonector'
 
 repositories {
-    jcenter()
-}
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '3.1'
+  jcenter()
 }
 
 /*
@@ -27,41 +25,34 @@ sourceCompatibility = 1.8
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 dependencies {
-    compile 'org.apache.logging.log4j:log4j-api:2.7+',
-    		'org.apache.logging.log4j:log4j-core:2.7+'
-    testCompile 'junit:junit:4.11+', 
-    			'org.mockito:mockito-core:2.1+' 
+  implementation 'org.apache.logging.log4j:log4j-api:2.13+',
+                 'org.apache.logging.log4j:log4j-core:2.13+'
+  testImplementation 'junit:junit:4.13+', 
+                     'org.mockito:mockito-core:3.3+' 
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
+  classifier = 'sources'
+  from sourceSets.main.allSource
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
+  classifier = 'javadoc'
+  from javadoc.destinationDir
 }
 
 artifacts {
-    archives sourcesJar, javadocJar
+  archives sourcesJar, javadocJar
 }
 
 /*
  * Verification
  */
-tasks.withType(FindBugs) {
-    reports {
-        xml.enabled false
-        html.enabled true
-    }
-}
-
 jacocoTestReport {
-    reports {
-        xml.enabled = true
-        html.enabled = true
-    }
+  reports {
+    xml.enabled = true
+    html.enabled = true
+  }
 }
 
 check.dependsOn jacocoTestReport
@@ -70,40 +61,46 @@ jar.dependsOn check
 /*
  * Publishing
  */
-task(checkVersionPresent) << {
-	if(project.version == 'unspecified' || project.version == null){
-		throw StopExecutionException('Must provide version number with -Pversion="x.y.z"!')
-	}
+
+import org.ajoberstar.gradle.git.release.opinion.Strategies
+
+release {
+  // Version is inferred from git tags. To do a new release, do:
+  //
+  // ./gradlew release -Prelease.stage=final -Prelease.scope=major/minor/patch
+  versionStrategy Strategies.FINAL
+  defaultVersionStrategy Strategies.SNAPSHOT
+  tagStrategy {
+    generateMessage = { version -> "Version $project.version" }
+  }
 }
 
 publishing {
-    publications {
-        gonector(MavenPublication) {
-            from components.java
-            artifact sourcesJar { classifier "sources" }
-            artifact javadocJar { classifier "javadoc" }
-        }
+  publications {
+    gonector(MavenPublication) {
+      from components.java
+      artifact sourcesJar { classifier "sources" }
+      artifact javadocJar { classifier "javadoc" }
     }
+  }
 }
 
 bintray {
-	user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
-	key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
-	publications = ['gonector']
-	pkg {
-		repo = 'lisoft'
-		name = project.name
-		userOrg = user
-		licenses = ['LGPL-3.0']
-		vcsUrl = 'https://github.com/EmilyBjoerk/gonector.git'
-		labels = ['java', 'go']
-		publicDownloadNumbers = true
-		version {
-			name = project.version
-			desc = 'GoNector ' + project.version
-			vcsTag = project.version
-		}
-	}
+  user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
+  key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
+  publications = ['gonector']
+  pkg {
+    repo = 'lisoft'
+    name = project.name
+    userOrg = user
+    licenses = ['LGPL-3.0']
+    vcsUrl = 'https://github.com/EmilyBjoerk/gonector.git'
+    labels = ['java', 'go']
+    publicDownloadNumbers = true
+    version {
+      name = project.version
+      desc = 'GoNector ' + project.version
+      vcsTag = project.version
+    }
+  }
 }
-
-bintrayUpload.dependsOn checkVersionPresent
