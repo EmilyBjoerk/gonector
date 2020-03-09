@@ -1,12 +1,12 @@
 language: java
 
 jdk:
-  - oraclejdk8
+  - oraclejdk11
 
 addons:
   apt:
     packages:
-      - oracle-java8-installer
+      - openjdk-11-jdk
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
