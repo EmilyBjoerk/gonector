@@ -1,4 +1,4 @@
-[![Status](https://img.shields.io/travis/EmilyBjoerk/gonector.svg)](https://travis-ci.org/EmilyBjoerk/gonector)
+[![Build Status](https://img.shields.io/travis/EmilyBjoerk/gonector.svg)](https://travis-ci.org/EmilyBjoerk/gonector)
 [![Code Coverage](https://img.shields.io/codecov/c/github/EmilyBjoerk/gonector/master.svg)](https://codecov.io/github/EmilyBjoerk/gonector?branch=master)
 [![Bintray](https://img.shields.io/bintray/v/emilybjoerk/lisoft/gonector.svg)](https://bintray.com/emilybjoerk/lisoft/gonector)
 
@@ -10,7 +10,7 @@ Gonector is available from the [jcenter](https://bintray.com/bintray/jcenter) Ma
 
 Gradle:
 ```gradle
-compile 'org.li-soft.gonector:gonector:1.0.0'
+compile 'org.li-soft.gonector:gonector:1.1.1'
 ```
 
 Maven:
@@ -18,7 +18,7 @@ Maven:
 <dependency>
   <groupId>org.li-soft.gonector</groupId>
   <artifactId>gonector</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.1</version>
   <type>pom</type>
 </dependency>
 ```
@@ -60,6 +60,14 @@ class RandomGoEngine implements GoEngine {
     @Override public String getName() {
         return "Random Engine";
     }
+	
+	@Override public boolean canScore() {
+	    return true;
+	}
+
+	@Override public Score getScore() {
+	    return Score.DRAW;
+	}
 
     @Override public String getVersion() {
         return "0.0.1";

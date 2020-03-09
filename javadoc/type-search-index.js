@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes","url":"allclasses-index.html"},{"p":"org.lisoft.gonector","l":"GoEngine"},{"p":"org.lisoft.gonector","l":"GoTextProtocol"},{"p":"org.lisoft.gonector","l":"Move"},{"p":"org.lisoft.gonector","l":"Player"},{"p":"org.lisoft.gonector","l":"Score"},{"p":"org.lisoft.gonector","l":"SyntaxErrorException"}]
