@@ -31,7 +31,7 @@ Maven:
 
 
 # JavaDoc
-The JavaDoc can be found here: https://emilybjoerk.github.io/gonector/javadoc/ 
+The JavaDoc can be found [here](https://emilybjoerk.github.io/gonector/javadoc/).
 
 # Usage
 The easiest way to use GoNector is to connect it to standard input and standard output like so:
@@ -51,9 +51,9 @@ The easiest way to use GoNector is to connect it to standard input and standard 
     }
 ```
 
-All that is left for you to do is to implement the `GoEngine` interface to implement your bot. Documentation can be found in the JavaDoc, also for reference you might want to read the Go Text Protocol (GTP) specification here: https://www.lysator.liu.se/~gunnar/gtp/.
+All that is left for you to do is to implement the `GoEngine` interface to implement your bot. Documentation can be found in the JavaDoc, also for reference you might want to read the [Go Text Protocol (GTP) specification](https://www.lysator.liu.se/~gunnar/gtp/).
 
-Once you have implemented your `GoEngine` and added the above to your main method you should be able to play against the bot using any software that supports the GTP version 2. Like for example: https://sourceforge.net/projects/gogui/. Simply build your project to a fat jar and tell GoGui or whatever program you choose to use to execute `java -jar /path/to/thejarfile.jar`.
+Once you have implemented your `GoEngine` and added the above to your main method you should be able to play against the bot using any software that supports the GTP version 2. Like for example: [gogui](https://sourceforge.net/projects/gogui/). Simply build your project to a fat jar and tell GoGui or whatever program you choose to use to execute `java -jar /path/to/thejarfile.jar`.
 
 Here is an example bot that plays random moves:
 
