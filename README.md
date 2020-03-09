@@ -10,7 +10,13 @@ Gonector is available from the [jcenter](https://bintray.com/bintray/jcenter) Ma
 
 Gradle:
 ```gradle
-compile 'org.li-soft.gonector:gonector:1.1.1'
+repositories {
+  jcenter()
+}
+
+dependencies {
+  implementation 'org.li-soft.gonector:gonector:1.1.1'
+}
 ```
 
 Maven:
@@ -60,14 +66,14 @@ class RandomGoEngine implements GoEngine {
     @Override public String getName() {
         return "Random Engine";
     }
-	
-	@Override public boolean canScore() {
-	    return true;
-	}
 
-	@Override public Score getScore() {
-	    return Score.DRAW;
-	}
+    @Override public boolean canScore() {
+        return true;
+    }
+
+    @Override public Score getScore() {
+        return Score.DRAW;
+    }
 
     @Override public String getVersion() {
         return "0.0.1";
